@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>传送带故障检测系统 | 数据报表</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🏭</span>
+                <span class="logo-text">传送带故障检测系统</span>
+                <span class="logo-sub">智能物联网监测平台</span>
+            </div>
+           <div class="nav-links">
+    <a href="index.html" class="nav-link">📈 波形图</a>
+    <a href="data.html" class="nav-link active">📋 数据报表</a>
+    <a href="alarm.html" class="nav-link">🔔 报警记录</a>
+</div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-group">
+                <div class="status-item">
+                    <span class="status-label">📡 设备状态：</span>
+                    <span id="deviceStatus" class="status-value online">在线</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">🕐 最后更新：</span>
+                    <span id="lastUpdate" class="status-value">--:--:--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">📊 数据记录数：</span>
+                    <span id="recordCount" class="status-value">0</span>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="refreshBtn" class="btn btn-primary">🔄 刷新数据</button>
+            </div>
+        </div>
+
+        <!-- 实时数据卡片（8个） -->
+        <div class="sensor-grid">
+            <div class="sensor-card">
+                <h4>🌡️ 温度</h4>
+                <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
+                <div class="sensor-status" id="tempStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📊 X轴瞬时</h4>
+                <div class="sensor-value"><span id="xValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="xStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📊 Y轴瞬时</h4>
+                <div class="sensor-value"><span id="yValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="yStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📊 Z轴瞬时</h4>
+                <div class="sensor-value"><span id="zValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="zStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>🔧 皮带张力</h4>
+                <div class="sensor-value"><span id="pressureValue">--</span><span class="sensor-unit">kPa</span></div>
+                <div class="sensor-status" id="pressureStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📈 X轴RMS</h4>
+                <div class="sensor-value"><span id="rmsXValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="rmsXStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📈 Y轴RMS</h4>
+                <div class="sensor-value"><span id="rmsYValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="rmsYStatus">--</div>
+            </div>
+            <div class="sensor-card">
+                <h4>📈 Z轴RMS</h4>
+                <div class="sensor-value"><span id="rmsZValue">--</span><span class="sensor-unit">g</span></div>
+                <div class="sensor-status" id="rmsZStatus">--</div>
+            </div>
+        </div>
+
+        <!-- 查询控制栏 -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3>📅 数据查询与导出</h3>
+            </div>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+                <div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 4px;">开始日期</div>
+                    <input type="date" id="startDate" class="threshold-input" style="width: 180px;">
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 4px;">结束日期</div>
+                    <input type="date" id="endDate" class="threshold-input" style="width: 180px;">
+                </div>
+                <div>
+                    <button id="queryDataBtn" class="btn btn-primary">🔍 查询数据</button>
+                </div>
+                <div>
+                    <button id="exportDataBtn" class="btn btn-success">📥 导出查询结果</button>
+                </div>
+                <div>
+                    <button id="exportAllBtn" class="btn btn-secondary">📥 导出全部数据</button>
+                </div>
+                <div>
+                    <button id="clearDataBtn" class="btn btn-danger">🗑️ 清空历史数据</button>
+                </div>
+            </div>
+            <div style="margin-top: 12px; font-size: 13px; color: #666;">
+                💡 提示：选择日期范围后点击查询，可导出CSV文件（Excel可直接打开，中文不乱码）
+            </div>
+        </div>
+
+        <!-- 历史数据表格 -->
+        <div class="data-table-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3>📋 历史数据记录</h3>
+                <span id="queryResultInfo" style="font-size: 13px; color: #666;">显示最近100条记录</span>
+            </div>
+            <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                <table class="data-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>温度(°C)</th>
+                            <th>X瞬时(g)</th>
+                            <th>Y瞬时(g)</th>
+                            <th>Z瞬时(g)</th>
+                            <th>张力(kPa)</th>
+                            <th>X RMS(g)</th>
+                            <th>Y RMS(g)</th>
+                            <th>Z RMS(g)</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="10" style="text-align: center;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <h3>📊 数据统计摘要</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="color: #666; font-size: 13px;">温度范围</div>
+                    <div style="font-size: 18px; font-weight: bold;" id="tempRange">--</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 13px;">X轴瞬时范围</div>
+                    <div style="font-size: 18px; font-weight: bold;" id="xRange">--</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 13px;">Y轴瞬时范围</div>
+                    <div style="font-size: 18px; font-weight: bold;" id="yRange">--</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 13px;">Z轴瞬时范围</div>
+                    <div style="font-size: 18px; font-weight: bold;" id="zRange">--</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 13px;">张力范围</div>
+                    <div style="font-size: 18px; font-weight: bold;" id="pressureRange">--</div>
+                </div>
+                <div>
+                    <div style="color: #666; font-size: 13px;">总记录数</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #667eea;" id="totalRecords">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 传送带故障检测系统 | 数据实时同步自华为云IoTDA</p>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // 当前显示的数据（查询结果）
+        let currentDisplayData = [];
+        
+        // ========== 刷新页面UI ==========
+        function refreshPageUI() {
+            updateSensorCards();
+            updateStatistics();
+            // 如果没有查询结果，显示最近100条
+            if (currentDisplayData.length === 0) {
+                const allData = window.common.allHistoryData || [];
+                displayData(allData.slice(0, 100));
+                document.getElementById('queryResultInfo').textContent = `显示最近${Math.min(100, allData.length)}条记录`;
+            }
+            document.getElementById('deviceStatus').textContent = '在线';
+            document.getElementById('deviceStatus').className = 'status-value online';
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            document.getElementById('recordCount').textContent = (window.common.allHistoryData || []).length;
+        }
+        
+// ========== 更新传感器卡片 ==========
+function updateSensorCards() {
+    const data = window.common.currentDeviceData;
+    const diagnosis = window.common.currentDiagnosis || {};
+    const isAlarm = diagnosis.alarm || false;
+    const faultType = diagnosis.fault_type || '正常';
+    
+    function setCard(id, value, unit) {
+        const valEl = document.getElementById(id + 'Value');
+        const statusEl = document.getElementById(id + 'Status');
+        
+        if (valEl) {
+            if (value !== null && value !== undefined) {
+                valEl.textContent = unit === 'kPa' ? value.toFixed(3) : value.toFixed(4);
+            } else {
+                valEl.textContent = '--';
+            }
+        }
+        
+        if (statusEl) {
+            if (isAlarm && faultType !== '正常') {
+                statusEl.textContent = '⚠️ 报警';
+                statusEl.className = 'sensor-status status-alarm';
+            } else {
+                statusEl.textContent = '✅ 正常';
+                statusEl.className = 'sensor-status status-ok';
+            }
+        }
+    }
+    
+    setCard('temp', data.temperature, '°C');
+    setCard('x', data.x_axis, 'g');
+    setCard('y', data.y_axis, 'g');
+    setCard('z', data.z_axis, 'g');
+    setCard('pressure', data.ch1_pressure, 'kPa');
+    setCard('rmsX', data.rms_x, 'g');
+    setCard('rmsY', data.rms_y, 'g');
+    setCard('rmsZ', data.rms_z, 'g');
+}
+        
+// ========== 显示数据表格 ==========
+function displayData(data) {
+    const tbody = document.getElementById('tableBody');
+    const diagnosis = window.common.currentDiagnosis || {};
+    const isAlarm = diagnosis.alarm && diagnosis.fault_type !== '正常';
+    
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    // 按时间倒序排列
+    const sorted = [...data].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    let html = '';
+    for (const item of sorted) {
+        const statusText = isAlarm ? '⚠️ 报警' : '✅ 正常';
+        const rowClass = isAlarm ? 'critical-row' : '';
+        
+        const timeStr = item.displayTime || new Date(item.timestamp).toLocaleString();
+        
+        html += `<tr class="${rowClass}">
+            <td>${timeStr}</td>
+            <td>${item.temperature?.toFixed(2) || '--'}</td>
+            <td>${item.x_axis?.toFixed(4) || '--'}</td>
+            <td>${item.y_axis?.toFixed(4) || '--'}</td>
+            <td>${item.z_axis?.toFixed(4) || '--'}</td>
+            <td>${item.ch1_pressure?.toFixed(3) || '--'}</td>
+            <td>${item.rms_x?.toFixed(4) || '--'}</td>
+            <td>${item.rms_y?.toFixed(4) || '--'}</td>
+            <td>${item.rms_z?.toFixed(4) || '--'}</td>
+            <td>${statusText}</td>
+        </tr>`;
+    }
+    
+    tbody.innerHTML = html;
+}
+        
+        // ========== 更新统计信息 ==========
+        function updateStatistics() {
+            const history = window.common.allHistoryData || [];
+            
+            if (history.length === 0) {
+                document.getElementById('tempRange').textContent = '--';
+                document.getElementById('xRange').textContent = '--';
+                document.getElementById('yRange').textContent = '--';
+                document.getElementById('zRange').textContent = '--';
+                document.getElementById('pressureRange').textContent = '--';
+                document.getElementById('totalRecords').textContent = '0';
+                return;
+            }
+            
+            // 温度
+            const temps = history.filter(d => d.temperature != null).map(d => d.temperature);
+            if (temps.length) {
+                document.getElementById('tempRange').textContent = `${Math.min(...temps).toFixed(1)} ~ ${Math.max(...temps).toFixed(1)} °C`;
+            }
+            
+            // X轴瞬时
+            const xVals = history.filter(d => d.x_axis != null).map(d => d.x_axis);
+            if (xVals.length) {
+                document.getElementById('xRange').textContent = `${Math.min(...xVals).toFixed(4)} ~ ${Math.max(...xVals).toFixed(4)} g`;
+            }
+            
+            // Y轴瞬时
+            const yVals = history.filter(d => d.y_axis != null).map(d => d.y_axis);
+            if (yVals.length) {
+                document.getElementById('yRange').textContent = `${Math.min(...yVals).toFixed(4)} ~ ${Math.max(...yVals).toFixed(4)} g`;
+            }
+            
+            // Z轴瞬时
+            const zVals = history.filter(d => d.z_axis != null).map(d => d.z_axis);
+            if (zVals.length) {
+                document.getElementById('zRange').textContent = `${Math.min(...zVals).toFixed(4)} ~ ${Math.max(...zVals).toFixed(4)} g`;
+            }
+            
+            // 张力
+            const pVals = history.filter(d => d.ch1_pressure != null).map(d => d.ch1_pressure);
+            if (pVals.length) {
+                document.getElementById('pressureRange').textContent = `${Math.min(...pVals).toFixed(3)} ~ ${Math.max(...pVals).toFixed(3)} kPa`;
+            }
+            
+            document.getElementById('totalRecords').textContent = history.length;
+        }
+        
+        // ========== 查询数据 ==========
+        function queryData() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('请选择开始日期和结束日期');
+                return;
+            }
+            
+            // 调用 common.js 的查询函数
+            const filtered = window.common.getDataByDateRange(startDate, endDate);
+            currentDisplayData = filtered;
+            displayData(filtered);
+            
+            const infoEl = document.getElementById('queryResultInfo');
+            infoEl.textContent = `查询结果：${filtered.length} 条记录 (${startDate} 至 ${endDate})`;
+            
+            console.log(`查询完成，找到 ${filtered.length} 条记录`);
+        }
+        
+        // ========== 导出CSV（横纵分布格式）==========
+        function exportToCSV(data, filename) {
+            if (!data || data.length === 0) {
+                alert('没有数据可导出');
+                return;
+            }
+            
+            // 按时间正序排列
+            const sorted = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            // 定义列头（第一行是数据类型）
+            const headers = [
+                '时间',
+                '温度(°C)',
+                'X轴瞬时(g)',
+                'Y轴瞬时(g)',
+                'Z轴瞬时(g)',
+                '皮带张力(kPa)',
+                'X轴RMS(g)',
+                'Y轴RMS(g)',
+                'Z轴RMS(g)'
+            ];
+            
+            // 构建数据行（每一行是一个时间点的数据）
+            const rows = [];
+            for (const item of sorted) {
+                const timeStr = item.displayTime || new Date(item.timestamp).toLocaleString();
+                rows.push([
+                    timeStr,
+                    item.temperature?.toFixed(2) || '',
+                    item.x_axis?.toFixed(4) || '',
+                    item.y_axis?.toFixed(4) || '',
+                    item.z_axis?.toFixed(4) || '',
+                    item.ch1_pressure?.toFixed(3) || '',
+                    item.rms_x?.toFixed(4) || '',
+                    item.rms_y?.toFixed(4) || '',
+                    item.rms_z?.toFixed(4) || ''
+                ]);
+            }
+            
+            // 转换为CSV格式
+            const csvRows = [headers.join(',')];
+            for (const row of rows) {
+                csvRows.push(row.join(','));
+            }
+            
+            const csvContent = csvRows.join('\n');
+            
+            // 添加UTF-8 BOM头，确保Excel正确识别中文
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log(`导出完成：${filename}，共 ${rows.length} 条记录`);
+        }
+        
+        // ========== 页面初始化 ==========
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('数据报表页面启动...');
+            
+            // 设置默认日期范围（最近7天）
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            
+            document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            
+            // 注册数据更新回调
+            if (window.common && window.common.onDataUpdate) {
+                window.common.onDataUpdate(() => {
+                    refreshPageUI();
+                });
+            }
+            
+            // 首次加载数据
+            await window.common.updateData();
+            refreshPageUI();
+            
+            // 启动自动刷新（每5秒）
+            window.common.startAutoRefresh(5000);
+            
+            // 刷新按钮
+            document.getElementById('refreshBtn').addEventListener('click', async () => {
+                await window.common.updateData();
+                refreshPageUI();
+            });
+            
+            // 查询按钮
+            document.getElementById('queryDataBtn').addEventListener('click', () => {
+                queryData();
+            });
+            
+            // 导出查询结果
+            document.getElementById('exportDataBtn').addEventListener('click', () => {
+                if (currentDisplayData.length === 0) {
+                    alert('没有查询结果可导出，请先查询数据');
+                    return;
+                }
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                exportToCSV(currentDisplayData, `传送带数据_${startDate}_至_${endDate}.csv`);
+            });
+            
+            // 导出全部数据
+            document.getElementById('exportAllBtn').addEventListener('click', () => {
+                const allData = window.common.allHistoryData || [];
+                if (allData.length === 0) {
+                    alert('没有数据可导出');
+                    return;
+                }
+                const today = new Date().toISOString().split('T')[0];
+                exportToCSV(allData, `传送带数据_全部_${today}.csv`);
+            });
+            
+            // 清空历史数据
+            document.getElementById('clearDataBtn').addEventListener('click', () => {
+                if (confirm('确定要清空所有历史数据吗？此操作不可恢复。')) {
+                    window.common.allHistoryData = [];
+                    window.common.saveHistoryData();
+                    currentDisplayData = [];
+                    displayData([]);
+                    updateStatistics();
+                    document.getElementById('queryResultInfo').textContent = '显示最近100条记录';
+                    document.getElementById('recordCount').textContent = '0';
+                    alert('历史数据已清空');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

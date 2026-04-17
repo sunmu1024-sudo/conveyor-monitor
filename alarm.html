@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>传送带故障检测系统 | 报警记录</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🏭</span>
+                <span class="logo-text">传送带故障检测系统</span>
+                <span class="logo-sub">智能物联网监测平台</span>
+            </div>
+           <div class="nav-links">
+    <a href="index.html" class="nav-link">📈 波形图</a>
+    <a href="data.html" class="nav-link">📋 数据报表</a>
+    <a href="alarm.html" class="nav-link active">🔔 报警记录</a>
+</div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="status-bar">
+            <div class="status-group">
+                <div class="status-item"><span class="status-label">📡 设备状态：</span><span id="deviceStatus" class="status-value online">在线</span></div>
+                <div class="status-item"><span class="status-label">🕐 最后更新：</span><span id="lastUpdate" class="status-value">--:--:--</span></div>
+                <div class="status-item"><span class="status-label">🔔 报警总数：</span><span id="alarmTotal" class="status-value">0</span></div>
+            </div>
+            <div class="btn-group">
+                <button id="refreshBtn" class="btn btn-primary">🔄 刷新数据</button>
+                <button id="clearAlarmBtn" class="btn btn-danger">🗑️ 清空报警记录</button>
+            </div>
+        </div>
+
+        <!-- 实时数据卡片（8个） -->
+        <div class="sensor-grid">
+            <div class="sensor-card"><h4>🌡️ 温度</h4><div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div><div class="sensor-status" id="tempStatus">--</div></div>
+            <div class="sensor-card"><h4>📊 X轴瞬时</h4><div class="sensor-value"><span id="xValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="xStatus">--</div></div>
+            <div class="sensor-card"><h4>📊 Y轴瞬时</h4><div class="sensor-value"><span id="yValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="yStatus">--</div></div>
+            <div class="sensor-card"><h4>📊 Z轴瞬时</h4><div class="sensor-value"><span id="zValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="zStatus">--</div></div>
+            <div class="sensor-card"><h4>🔧 皮带张力</h4><div class="sensor-value"><span id="pressureValue">--</span><span class="sensor-unit">kPa</span></div><div class="sensor-status" id="pressureStatus">--</div></div>
+            <div class="sensor-card"><h4>📈 X轴RMS</h4><div class="sensor-value"><span id="rmsXValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="rmsXStatus">--</div></div>
+            <div class="sensor-card"><h4>📈 Y轴RMS</h4><div class="sensor-value"><span id="rmsYValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="rmsYStatus">--</div></div>
+            <div class="sensor-card"><h4>📈 Z轴RMS</h4><div class="sensor-value"><span id="rmsZValue">--</span><span class="sensor-unit">g</span></div><div class="sensor-status" id="rmsZStatus">--</div></div>
+        </div>
+
+        <!-- 报警统计卡片 -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header"><h3>📊 报警统计</h3></div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div><div style="color:#dc3545;font-size:13px;">🔴 严重报警</div><div style="font-size:28px;font-weight:bold;color:#dc3545;" id="highAlarmCount">0</div></div>
+                <div><div style="color:#ffc107;font-size:13px;">⚠️ 警告</div><div style="font-size:28px;font-weight:bold;color:#ffc107;" id="mediumAlarmCount">0</div></div>
+                <div><div style="color:#28a745;font-size:13px;">✅ 当前状态</div><div style="font-size:28px;font-weight:bold;color:#28a745;" id="normalCount">正常</div></div>
+            </div>
+        </div>
+
+        <!-- 当前诊断状态 -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header"><h3>🧠 当前边缘AI诊断状态</h3></div>
+            <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                <div><span style="color:#666;">诊断结果：</span><span style="font-size:20px;font-weight:bold;" id="currentFaultType">正常</span></div>
+                <div><span style="color:#666;">置信度：</span><span style="font-size:20px;font-weight:bold;" id="currentConfidence">0%</span></div>
+                <div><span style="color:#666;">报警状态：</span><span id="currentAlarmStatus" style="padding:6px 16px;border-radius:20px;background:#d4edda;color:#155724;">✅ 正常</span></div>
+            </div>
+        </div>
+
+        <!-- 报警记录列表 -->
+        <div class="card">
+            <div class="card-header"><h3>🔔 报警记录列表</h3><span style="font-size:13px;color:#666;">按时间倒序排列</span></div>
+            <div class="alarm-list" id="alarmList"><div style="padding:40px;text-align:center;color:#999;">暂无报警记录</div></div>
+        </div>
+
+        <div class="footer"><p>© 2025 传送带故障检测系统 | 边缘AI智能诊断报警</p></div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        function refreshPageUI() { 
+            updateSensorCards(); 
+            updateDiagnosisStatus(); 
+            displayAlarms(); 
+            updateAlarmStats(); 
+            document.getElementById('deviceStatus').textContent = '在线'; 
+            document.getElementById('deviceStatus').className = 'status-value online'; 
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString(); 
+        }
+        
+        function updateSensorCards() {
+            const data = window.common.currentDeviceData;
+            const diagnosis = window.common.currentDiagnosis || {};
+            const isAlarm = diagnosis.alarm || false;
+            const faultType = diagnosis.fault_type || '正常';
+            
+            function setCard(id, value, unit) {
+                const valEl = document.getElementById(id + 'Value');
+                const statusEl = document.getElementById(id + 'Status');
+                if (valEl) valEl.textContent = (value !== null && value !== undefined) ? (unit === 'kPa' ? value.toFixed(3) : value.toFixed(4)) : '--';
+                if (statusEl) {
+                    if (isAlarm && faultType !== '正常') {
+                        statusEl.textContent = '⚠️ 报警';
+                        statusEl.className = 'sensor-status status-alarm';
+                    } else {
+                        statusEl.textContent = '✅ 正常';
+                        statusEl.className = 'sensor-status status-ok';
+                    }
+                }
+            }
+            
+            setCard('temp', data.temperature, '°C');
+            setCard('x', data.x_axis, 'g');
+            setCard('y', data.y_axis, 'g');
+            setCard('z', data.z_axis, 'g');
+            setCard('pressure', data.ch1_pressure, 'kPa');
+            setCard('rmsX', data.rms_x, 'g');
+            setCard('rmsY', data.rms_y, 'g');
+            setCard('rmsZ', data.rms_z, 'g');
+        }
+
+        function updateDiagnosisStatus() {
+            const d = window.common.currentDiagnosis || {}, ft = d.fault_type || '正常', cf = d.confidence || 0, alarm = d.alarm || false;
+            document.getElementById('currentFaultType').textContent = ft;
+            document.getElementById('currentConfidence').textContent = (cf * 100).toFixed(1) + '%';
+            const st = document.getElementById('currentAlarmStatus');
+            if (alarm && ft !== '正常') { 
+                st.style.background = '#f8d7da'; 
+                st.style.color = '#721c24'; 
+                st.textContent = `🔴 报警 - ${ft}`; 
+            } else { 
+                st.style.background = '#d4edda'; 
+                st.style.color = '#155724'; 
+                st.textContent = '✅ 正常'; 
+            }
+        }
+
+        function displayAlarms() {
+            const alarms = window.common.alarmRecords || [], container = document.getElementById('alarmList');
+            document.getElementById('alarmTotal').textContent = alarms.length;
+            if (!alarms.length) { 
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#999;">暂无报警记录</div>'; 
+                return; 
+            }
+            const sorted = [...alarms].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            let html = '';
+            for (const a of sorted) {
+                // 只显示边缘AI报警
+                if (a.source !== 'edge_ai') continue;
+                
+                const time = new Date(a.timestamp).toLocaleString();
+                const level = a.severity === 'high' ? 'alarm' : 'warning';
+                const cls = level === 'alarm' ? 'critical' : 'warning';
+                
+                html += `<div class="alarm-item ${cls}">
+                    <div class="alarm-time">📅 ${time}</div>
+                    <div class="alarm-param">
+                        <span style="background:#667eea;color:white;padding:2px 8px;border-radius:12px;font-size:11px;margin-right:8px;">边缘AI</span>
+                        ${a.fault_type}
+                    </div>
+                    <div class="alarm-value">置信度: ${(a.confidence * 100).toFixed(1)}%</div>
+                    <div class="alarm-status ${cls === 'critical' ? 'status-alarm' : 'status-warn'}">
+                        ${a.severity === 'high' ? '🔴 严重' : '⚠️ 警告'}
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html || '<div style="padding:40px;text-align:center;color:#999;">暂无报警记录</div>';
+        }
+
+        function updateAlarmStats() {
+            const alarms = window.common.alarmRecords || [];
+            let high = 0, medium = 0;
+            
+            for (const a of alarms) {
+                if (a.source !== 'edge_ai') continue;
+                if (a.severity === 'high') high++;
+                else medium++;
+            }
+            
+            document.getElementById('highAlarmCount').textContent = high;
+            document.getElementById('mediumAlarmCount').textContent = medium;
+            
+            const d = window.common.currentDiagnosis || {};
+            const isNormal = d.fault_type === '正常' || !d.alarm;
+            document.getElementById('normalCount').textContent = isNormal ? '正常' : '报警中';
+            document.getElementById('normalCount').style.color = isNormal ? '#28a745' : '#dc3545';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.common?.onDataUpdate) window.common.onDataUpdate(() => refreshPageUI());
+            await window.common.updateData(); 
+            refreshPageUI(); 
+            window.common.startAutoRefresh(5000);
+            document.getElementById('refreshBtn').addEventListener('click', async () => { 
+                await window.common.updateData(); 
+                refreshPageUI(); 
+            });
+            document.getElementById('clearAlarmBtn').addEventListener('click', () => { 
+                if (confirm('确定清空所有报警记录？')) { 
+                    window.common.clearAlarmRecords(); 
+                    refreshPageUI(); 
+                } 
+            });
+        });
+    </script>
+</body>
+</html>
