@@ -44,50 +44,6 @@
             </div>
         </div>
 
-        <!-- 实时数据卡片（8个） -->
-        <div class="sensor-grid">
-            <div class="sensor-card">
-                <h4>🌡️ 温度</h4>
-                <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
-                <div class="sensor-status" id="tempStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📊 X轴瞬时</h4>
-                <div class="sensor-value"><span id="xValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="xStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📊 Y轴瞬时</h4>
-                <div class="sensor-value"><span id="yValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="yStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📊 Z轴瞬时</h4>
-                <div class="sensor-value"><span id="zValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="zStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>🔧 皮带张力</h4>
-                <div class="sensor-value"><span id="pressureValue">--</span><span class="sensor-unit">kPa</span></div>
-                <div class="sensor-status" id="pressureStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📈 X轴RMS</h4>
-                <div class="sensor-value"><span id="rmsXValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="rmsXStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📈 Y轴RMS</h4>
-                <div class="sensor-value"><span id="rmsYValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="rmsYStatus">--</div>
-            </div>
-            <div class="sensor-card">
-                <h4>📈 Z轴RMS</h4>
-                <div class="sensor-value"><span id="rmsZValue">--</span><span class="sensor-unit">g</span></div>
-                <div class="sensor-status" id="rmsZStatus">--</div>
-            </div>
-        </div>
-
         <!-- 查询控制栏 -->
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-header">
@@ -194,7 +150,6 @@
         
         // ========== 刷新页面UI ==========
         function refreshPageUI() {
-            updateSensorCards();
             updateStatistics();
             // 如果没有查询结果，显示最近100条
             if (currentDisplayData.length === 0) {
@@ -207,47 +162,7 @@
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
             document.getElementById('recordCount').textContent = (window.common.allHistoryData || []).length;
         }
-        
-// ========== 更新传感器卡片 ==========
-function updateSensorCards() {
-    const data = window.common.currentDeviceData;
-    const diagnosis = window.common.currentDiagnosis || {};
-    const isAlarm = diagnosis.alarm || false;
-    const faultType = diagnosis.fault_type || '正常';
     
-    function setCard(id, value, unit) {
-        const valEl = document.getElementById(id + 'Value');
-        const statusEl = document.getElementById(id + 'Status');
-        
-        if (valEl) {
-            if (value !== null && value !== undefined) {
-                valEl.textContent = unit === 'kPa' ? value.toFixed(3) : value.toFixed(4);
-            } else {
-                valEl.textContent = '--';
-            }
-        }
-        
-        if (statusEl) {
-            if (isAlarm && faultType !== '正常') {
-                statusEl.textContent = '⚠️ 报警';
-                statusEl.className = 'sensor-status status-alarm';
-            } else {
-                statusEl.textContent = '✅ 正常';
-                statusEl.className = 'sensor-status status-ok';
-            }
-        }
-    }
-    
-    setCard('temp', data.temperature, '°C');
-    setCard('x', data.x_axis, 'g');
-    setCard('y', data.y_axis, 'g');
-    setCard('z', data.z_axis, 'g');
-    setCard('pressure', data.ch1_pressure, 'kPa');
-    setCard('rmsX', data.rms_x, 'g');
-    setCard('rmsY', data.rms_y, 'g');
-    setCard('rmsZ', data.rms_z, 'g');
-}
-        
 // ========== 显示数据表格 ==========
 function displayData(data) {
     const tbody = document.getElementById('tableBody');
